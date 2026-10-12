@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OTIS EXAM PRO</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        :root {
+            --primary: #1e40af; --success: #16a34a; --warning: #f59e0b; --danger: #dc2626;
+            --light: #f1f5f9; --dark: #1e293b;
+        }
+        body { background: #f0f4f8; min-height: 100vh; padding-bottom: 80px; }
+
+        /* === LOGIN === */
+        .login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999; padding: 20px;
+        }
+        .login-box { background: white; padding: 30px 20px; border-radius: 16px; width: 100%; max-width: 360px; text-align: center; }
+        .login-box h1 { color: var(--primary); font-size: 1.6rem; margin-bottom: 10px; }
+        .login-box p { color: #64748b; font-size: 0.9rem; margin-bottom: 20px; }
+        .login-box input { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; margin-bottom: 12px; }
+        .login-box button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+        .login-box button:active { background: #1e3a8a; }
+
+        /* === HEADER === */
+        .header { background: var(--primary); color: white; padding: 16px; text-align: center; position: sticky; top: 0; z-index: 100; }
+        .header h1 { font-size: 1.25rem; }
+
+        /* === TABS / NAVIGATION === */
+        .tabs { display: flex; overflow-x: auto; background: white; border-bottom: 1px solid #ddd; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; }
+        .tab { flex: 1; min-width: 80px; padding: 12px 8px; text-align: center; font-size: 0.75rem; color: #64748b; cursor: pointer; }
+        .tab.active { color: var(--primary); border-top: 3px solid var(--primary); font-weight: bold; }
+        .tab-icon { font-size: 1.2rem; display: block; margin-bottom: 4px; }
+
+        /* === PAGES === */
+        .page { display: none; padding: 16px; }
+        .page.active { display: block; animation: fadeIn 0.25s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* === CARDS & BUTTONS === */
+        .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        h2 { font-size: 1.1rem; color: var(--dark); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+        h3 { font-size: 0.95rem; color: var(--dark); margin: 12px 0 8px; }
+
+        input, select, button, textarea {
+            width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; margin-bottom: 10px;
+        }
+        button { background: var(--primary); color: white; border: none; font-weight: 500; cursor: pointer; }
+        button:active { opacity: 0.85; }
+        button.success { background: var(--success); }
+        button.danger { background: var(--danger); }
+        button.outline { background: white; color: var(--primary); border: 2px solid var(--primary); }
+        button.sm { padding: 6px 10px; font-size: 0.85rem; width: auto; }
+        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+
+        /* === GRIDS & STATS === */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat-card { background: linear-gradient(135deg, var(--primary), #3b82f6); color: white; padding: 16px; border-radius: 10px; text-align: center; }
+        .stat-card.green { background: linear-gradient(135deg, #16a34a, #22c55e); }
+        .stat-card.orange { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .stat-card.red { background: linear-gradient(135deg, #dc2626, #f87171); }
+        .stat-value { font-size: 1.5rem; font-weight: bold; }
+        .stat-label { font-size: 0.8rem; opacity: 0.9; margin-top: 4px; }
+
+        /* === TABLES === */
+        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 10px 6px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: var(--light); font-weight: 600; }
+        .grade-A { color: #16a34a; font-weight: bold; }
+        .grade-B { color: #2563eb; font-weight: bold; }
+        .grade-C { color: #d97706; font-weight: bold; }
+        .grade-D { color: #ea580c; font-weight: bold; }
+        .grade-E { color: #dc2626; font-weight: bold; }
+
+        /* === UPLOAD === */
+        .upload-zone { border: 2px dashed #cbd5e1; border-radius: 10px; padding: 30px 15px; text-align: center; cursor: pointer; background: #fafafa; }
+        .upload-zone:active { background: #e0f2fe; border-color: var(--primary); }
+
+        /* === ALERTS === */
+        .alert { padding: 12px; border-radius: 8px; margin: 10px 0; font-size: 0.9rem; }
+        .alert.warning { background: #fffbeb; border-left: 4px solid var(--warning); }
+        .alert.danger { background: #fef2f2; border-left: 4px solid var(--danger); }
+        .alert.success { background: #f0fdf4; border-left: 4px solid var(--success); }
+
+        /* === TOAST === */
+        .toast {
+            position: fixed; top: 70px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: var(--success); color: white; padding: 12px 24px; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 9999;
+            transition: transform 0.3s; max-width: 90%; text-align: center;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.error { background: var(--danger); }
+
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .search-box { display: flex; gap: 8px; margin-bottom: 12px; }
+        .search-box input { flex: 1; margin: 0; }
+    </style>
+</head>
+<body>
+
+    <!-- === TOAST === -->
+    <div id="toast" class="toast"></div>
+
+    <!-- === LOGIN SCREEN === -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-box">
+            <h1>🎓 OTIS EXAM PRO</h1>
+            <p>Student Marks & Exam Management</p>
+            <input type="password" id="passwordInput" placeholder="Enter Password">
+            <button onclick="doLogin()">Login</button>
+            <p style="margin-top:15px; font-size:0.8rem;">Default: admin123</p>
+        </div>
+    </div>
+
+    <!-- === MAIN APP === -->
+    <div id="app" class="hidden">
+        <div class="header">
+            <h1>🎓 OTIS EXAM PRO</h1>
+        </div>
+
+        <!-- === DASHBOARD === -->
+        <div id="dashboard" class="page active">
+            <h2>📊 Dashboard</h2>
+            <div class="grid-2">
+                <div class="stat-card">
+                    <div class="stat-value" id="dStudents">0</div>
+                    <div class="stat-label">Students</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-value" id="dExams">0</div>
+                    <div class="stat-label">Exams</div>
+                </div>
+                <div class="stat-card.orange">
+                    <div class="stat-value" id="dAvg">0%</div>
+                    <div class="stat-label">Avg Score</div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-value" id="dRisk">0</div>
+                    <div class="stat-label">At Risk</div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:20px;">
+                <h3>📋 Recent Exams</h3>
+                <div id="recentList" style="font-size:0.9rem;">No exams yet</div>
+            </div>
+
+            <div class="card">
+                <h3>📈 Grade Overview</h3>
+                <div id="gradeOverview"></div>
+            </div>
+        </div>
+
+        <!-- === EXAMS === -->
+        <div id="exams" class="page">
+            <h2>📝 Exams</h2>
+            
+            <div class="card">
+                <h3>➕ Create Exam</h3>
+                <form id="examForm">
+                    <input type="text" id="examName" placeholder="Exam Name" required>
+                    <input type="text" id="examClass" placeholder="Class / Grade" required>
+                    <select id="examTerm" required>
+                        <option value="">Select Term</option>
+                        <option value="Term 1">Term 1</option>
+                        <option value="Term 2">Term 2</option>
+                        <option value="Term 3">Term 3</option>
+                    </select>
+                    <input type="number" id="examYear" placeholder="Year" value="2026" required>
+                    <button type="submit">💾 Save Exam</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>📐 CBE Grading Scale</h3>
+                <div id="gradingDisplay"></div>
+                <button class="sm outline" onclick="showGradingEdit()" style="margin-top:10px;">✏️ Edit Grades</button>
+            </div>
+
+            <div class="card">
+                <h3>📋 All Exams</h3>
+                <div id="examsList"></div>
+            </div>
+        </div>
+
+        <!-- === UPLOAD DATA === -->
+        <div id="upload" class="page">
+            <h2>📂 Upload Data</h2>
+            
+            <div class="alert warning">
+                📋 Download template → fill in Excel → save as CSV → upload below
+            </div>
+
+            <div class="btn-row">
+                <button class="outline" onclick="downloadTemplate()">📥 Download Template</button>
+                <button class="outline" onclick="downloadSample()">📝 Sample Data</button>
+            </div>
+
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                <div style="font-size:2rem;">📁</div>
+                <div style="font-weight:500; margin-top:8px;">Tap to select file</div>
+                <div style="font-size:0.8rem; color:#64748b; margin-top:4px;">.CSV files only</div>
+                <input type="file" id="fileInput" accept=".csv" style="display:none;">
+            </div>
+            <div id="fileInfo" style="font-size:0.9rem; margin:10px 0;"></div>
+            <button id="importBtn" onclick="importData()" style="display:none;">✅ Import Data</button>
+        </div>
+
+        <!-- === STUDENT RECORDS === -->
+        <div id="students" class="page">
+            <h2>👨‍🎓 Student Records</h2>
+            
+            <div class="card">
+                <h3>➕ Add Record</h3>
+                <form id="recordForm">
+                    <input type="hidden" id="editId">
+                    <input type="text" id="sAdm" placeholder="Admission No" required>
+                    <input type="text" id="sName" placeholder="Full Name" required>
+                    <input type="text" id="sClass" placeholder="Class" required>
+                    <select id="sGender">
+                        <option value="">Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                    <select id="sExam" required>
+                        <option value="">Select Exam</option>
+                    </select>
+                    <input type="text" id="sSubject" placeholder="Subject" required>
+                    <input type="number" id="sScore" placeholder="Score 0-100" min="0" max="100" required>
+                    <button type="submit">💾 Save Record</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="search-box">
+                    <input type="text" id="recSearch" placeholder="Search...">
+                    <button class="sm outline" onclick="renderRecords()">🔍</button>
+                </div>
+                <div class="table-wrap">
+                    <table id="recordsTable">
+                        <thead>
+                            <tr>
+                                <th>Adm</th>
+                                <th>Name</th>
+                                <th>Subj</th>
+                                <th>Score</th>
+                                <th>Gr</th>
+                                <th>⚙️</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- === REPORTS === -->
+        <div id="reports" class="page">
+            <h2>📄 Reports & Alerts</h2>
+            
+            <div class="card">
+                <h3>⚠️ Students at Risk</h3>
+                <div class="alert danger">Students scoring below 40%</div>
+                <div id="riskList"></div>
+            </div>
+
+            <div class="card">
+                <h3>📥 Export Data</h3>
+                <button onclick="exportAll()">📤 Export CSV</button>
+                <button onclick="window.print()" style="margin-top:8px;">🖨️ Print Records</button>
+            </div>
+
+            <div class="card">
+                <h3>⚙️ Settings</h3>
+                <input type="password" id="newPass" placeholder="New Password (leave blank to keep)">
+                <button onclick="changePassword()">🔄 Change Password</button>
+                <button class="danger" onclick="if(confirm('Delete ALL data? Cannot undo!')) clearAll()" style="margin-top:8px;">🗑️ Clear All Data</button>
+            </div>
+        </div>
+
+        <!-- === BOTTOM NAV === -->
+        <div class="tabs">
+            <div class="tab active" data-page="dashboard"><span class="tab-icon">📊</span>Dashboard</div>
+            <div class="tab" data-page="exams"><span class="tab-icon">📝</span>Exams</div>
+            <div class="tab" data-page="upload"><span class="tab-icon">📂</span>Upload</div>
+            <div class="tab" data-page="students"><span class="tab-icon">👨‍🎓</span>Records</div>
+            <div class="tab" data-page="reports"><span class="tab-icon">📄</span>More</div>
+        </div>
+    </div>
+
+    <script>
+        // === DATA & DEFAULTS ===
+        const DEFAULT_PASS = 'admin123';
+        const DEFAULT_GRADING = [
+            { grade: 'A', min: 75, max: 100, rem: 'Excellent' },
+            { grade: 'B', min: 60, max: 74, rem: 'Good' },
+            { grade: 'C', min: 50, max: 59, rem: 'Satisfactory' },
+            { grade: 'D', min: 40, max: 49, rem: 'Fair' },
+            { grade: 'E', min: 0, max: 39, rem: 'Needs Improvement' }
+        ];
+
+        let exams = JSON.parse(localStorage.getItem('otisExams')) || [];
+        let records = JSON.parse(localStorage.getItem('otisRecords')) || [];
+        let grading = JSON.parse(localStorage.getItem('otisGrading')) || DEFAULT_GRADING;
+        let password = localStorage.getItem('otisPass') || DEFAULT_PASS;
+        let pendingData = [];
+
+        // === LOGIN ===
+        function doLogin() {
+            const input = document.getElementById('passwordInput').value;
+            if (input === password) {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('app').classList.remove('hidden');
+                initApp();
+            } else {
+                showToast('❌ Wrong password', true);
+            }
+        }
+
+        // === INIT ===
+        function initApp() {
+            setupTabs();
+            setupForms();
+            setupUpload();
+            updateExamOptions();
+            renderDashboard();
+            renderExamsList();
+            renderGradingDisplay();
+            renderRecords();
+            renderRiskList();
+        }
+
+        // === TABS NAVIGATION ===
+        function setupTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.page).classList.add('active');
+                    
+                    if (tab.dataset.page === 'dashboard') renderDashboard();
+                    if (tab.dataset.page === 'students') renderRecords();
+                });
+            });
+        }
+
+        // === TOAST ===
+        function showToast(msg, isError=false) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        function saveData() {
+            localStorage.setItem('otisExams', JSON.stringify(exams));
+            localStorage.setItem('otisRecords', JSON.stringify(records));
+            localStorage.setItem('otisGrading', JSON.stringify(grading));
+        }
+
+        // === GRADING SYSTEM ===
+        function getGrade(score) {
+            for (let g of grading) {
+                if (score >= g.min && score <= g.max) {
+                    return { grade: g.grade, class: 'grade-' + g.grade, rem: g.rem };
+                }
+            }
+            return { grade: '-', class: '', rem: '-' };
+        }
+
+        function renderGradingDisplay() {
+            document.getElementById('gradingDisplay').innerHTML = grading.map(g => 
+                `<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #eee; font-size:0.9rem;">
+                    <strong class="grade-${g.grade}">${g.grade}</strong>
+                    <span>${g.min} - ${g.max}</span>
+                    <span style="color:#64748b; font-size:0.8rem;">${g.rem}</span>
+                </div>`
+            ).join('');
+        }
+
+        function showGradingEdit() {
+            const newA = prompt('Enter A range (e.g., 75-100):', '75-100');
+            const newB = prompt('Enter B range (e.g., 60-74):', '60-74');
+            const newC = prompt('Enter C range (e.g., 50-59):', '50-59');
+            const newD = prompt('Enter D range (e.g., 40-49):', '40-49');
+            const newE = prompt('Enter E range (e.g., 0-39):', '0-39');
+            
+            if (!newA || !newB || !newC || !newD || !newE) return;
+            
+            function parseRange(str) {
+                const [min, max] = str.split('-').map(Number);
+                return { min, max };
+            }
+            
+            grading = [
+                { grade: 'A', ...parseRange(newA), rem: 'Excellent' },
+                { grade: 'B', ...parseRange(newB), rem: 'Good' },
+                { grade: 'C', ...parseRange(newC), rem: 'Satisfactory' },
+                { grade: 'D', ...parseRange(newD), rem: 'Fair' },
+                { grade: 'E', ...parseRange(newE), rem: 'Needs Improvement' }
+            ];
+            saveData();
+            renderGradingDisplay();
+            renderRecords();
+            renderDashboard();
+            showToast('✅ Grading updated');
+        }
+
+        // === DASHBOARD ===
+        function renderDashboard() {
+            const uniqueStudents = new Set(records.map(r => r.adm + '|' + r.name)).size;
+            const avgScore = records.length ? Math.round(records.reduce((s, r) => s + r.score, 0) / records.length) : 0;
+            const atRisk = records.filter(r => r.score < 40).length;
+            
+            document.getElementById('dStudents').textContent = uniqueStudents;
+            document.getElementById('dExams').textContent = exams.length;
+            document.getElementById('dAvg').textContent = avgScore + '%';
+            document.getElementById('dRisk').textContent = atRisk;
+
+            // Recent exams
+            const recent = exams.slice(-3).reverse();
+            document.getElementById('recentList').innerHTML = recent.length ?
+                recent.map(e => `<div style="padding:6px 0; border-bottom:1px solid #eee;">📝 ${e.name} — ${e.term} ${e.year}</div>`).join('') :
+                '<p style="color:#94a3b8;">No exams created yet</p>';
+
+            // Grade overview
+            const counts = { A:0, B:0, C:0, D:0, E:0 };
+            records.forEach(r => counts[getGrade(r.score).grade]++);
+            document.getElementById('gradeOverview').innerHTML = Object.entries(counts).map(([g, c]) => 
+                `<div style="display:flex; justify-content:space-between; padding:4px 0; font-size:0.9rem;">
+                    <strong class="grade-${g}">${g}</strong>
+                    <span>${c} student${c !== 1 ? 's' : ''}</span>
+                </div>`
+            ).join('');
+        }
+
+        // === EXAMS MANAGEMENT ===
+        function setupForms() {
+            document.getElementById('examForm').addEventListener('submit', e => {
+                e.preventDefault();
+                exams.push({
+                    id: Date.now().toString(),
+                    name: document.getElementById('examName').value,
+                    class: document.getElementById('examClass').value,
+                    term: document.getElementById('examTerm').value,
+                    year: document.getElementById('examYear').value,
+                    status: 'active'
+                });
+                saveData();
+                renderExamsList();
+                updateExamOptions();
+                renderDashboard();
+                e.target.reset();
+                showToast('✅ Exam created');
+            });
+
+            document.getElementById('recordForm').addEventListener('submit', e => {
+                e.preventDefault();
+                const editId = document.getElementById('editId').value;
+                const rec = {
+                    id: editId || Date.now().toString(),
+                    adm: document.getElementById('sAdm').value,
+                    name: document.getElementById('sName').value,
+                    class: document.getElementById('sClass').value,
+                    gender: document.getElementById('sGender').value,
+                    examId: document.getElementById('sExam').value,
+                    examName: document.getElementById('sExam').selectedOptions[0]?.text || '',
+                    subject: document.getElementById('sSubject').value,
+                    score: parseInt(document.getElementById('sScore').value) || 0
+                };
+                
+                if (editId) {
+                    const idx = records.findIndex(r => r.id === editId);
+                    if (idx !== -1) records[idx] = rec;
+                    document.getElementById('editId').value = '';
+                    e.target.querySelector('button[type="submit"]').textContent = '💾 Save Record';
+                } else {
+                    records.push(rec);
+                }
+                saveData();
+                renderRecords();
+                renderDashboard();
+                renderRiskList();
+                e.target.reset();
+                showToast('✅ Record saved');
+            });
+        }
+
+        function renderExamsList() {
+            document.getElementById('examsList').innerHTML = exams.length ?
+                exams.map(e => `
+                    <div style="padding:10px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <strong>${e.name}</strong><br>
+                            <small style="color:#64748b;">${e.class} — ${e.term} ${e.year}</small>
+                        </div>
+                        <button class="sm danger" onclick="deleteExam('${e.id}')">🗑️</button>
+                    </div>
+                `).join('') : '<p style="color:#94a3b8; text-align:center; padding:15px;">No exams yet</p>';
+        }
+
+        function deleteExam(id) {
+            if (!confirm('Delete this exam? Marks under it will be removed too.')) return;
+            exams = exams.filter(e => e.id !== id);
+            records = records.filter(r => r.examId !== id);
+            saveData();
+            renderExamsList();
+            updateExamOptions();
+            renderRecords();
+            renderDashboard();
+            showToast('✅ Exam deleted');
+        }
+
+        function updateExamOptions() {
+            const opts = exams.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+            document.getElementById('sExam').innerHTML = '<option value="">Select Exam</option>' + opts;
+        }
+
+        // === UPLOAD & TEMPLATES ===
+        function downloadTemplate() {
+            const csv = "Admission No,Full Name,Class,Gender,Exam Name,Subject,Score,Term,Year\nSTD001,John Doe,Form 1,Male,End of Term 1,Mathematics,78,Term 1,2026";
+            downloadFile(csv, 'OTIS_Marks_Template.csv', 'text/csv');
+            showToast('✅ Template downloaded');
+        }
+
+        function downloadSample() {
+            const csv = "Admission No,Full Name,Class,Gender,Exam Name,Subject,Score,Term,Year\nSTD001,John Doe,Form 1,Male,End of Term 1,Mathematics,78,Term 1,2026\nSTD002,Jane Smith,Form 1,Female,End of Term 1,Mathematics,65,Term 1,2026";
+            downloadFile(csv, 'OTIS_Sample_Data.csv', 'text/csv');
+        }
+
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function setupUpload() {
+            document.getElementById('fileInput').addEventListener('change', e => {
+                if (e.target.files.length) handleFile(e.target.files[0]);
+            });
+        }
+
+        function handleFile(file) {
+            if (!file.name.endsWith('.csv')) {
+                showToast('❌ Only .csv files supported', true);
+                return;
+            }
+            document.getElementById('fileInfo').innerHTML = `📂 ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+            
+            const reader = new FileReader();
+            reader.onload = e => {
+                parseCSV(e.target.result);
+                document.getElementById('importBtn').style.display = 'block';
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            pendingData = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+                if (!cols[1]) continue;
+                
+                let examId = exams.find(e => e.name === cols[4])?.id;
+                if (!examId && cols[4]) {
+                    examId = Date.now().toString() + i;
+                    exams.push({
+                        id: examId,
+                        name: cols[4],
+                        class: cols[2],
+                        term: cols[7] || 'Term 1',
+                        year: cols[8] || new Date().getFullYear().toString(),
+                        status: 'active'
+                    });
+                }
+                
+                pendingData.push({
+                    id: Date.now().toString() + i,
+                    adm: cols[0],
+                    name: cols[1],
+                    class: cols[2],
+                    gender: cols[3] || '',
+                    examId: examId,
+                    examName: cols[4],
+                    subject: cols[5],
+                    score: parseInt(cols[6]) || 0
+                });
+            }
+            showToast(`✅ ${pendingData.length} records ready`);
+        }
+
+        function importData() {
+            if (!pendingData.length) return;
+            records = [...records, ...pendingData];
+            pendingData = [];
+            document.getElementById('fileInfo').innerHTML = '';
+            document.getElementById('importBtn').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            saveData();
+            updateExamOptions();
+            renderRecords();
+            renderDashboard();
+            renderRiskList();
+            showToast('✅ Data imported successfully!');
+        }
+
+        // === STUDENT RECORDS ===
+        function renderRecords() {
+            const search = document.getElementById('recSearch')?.value.toLowerCase() || '';
+            const tbody = document.getElementById('recordsBody');
+            
+            let filtered = records.filter(r => 
+                !search || r.name.toLowerCase().includes(search) || r.adm.toLowerCase().includes(search)
+            );
+
+            if (!filtered.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">No records found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(r => {
+                const g = getGrade(r.score);
+                return `
+                    <tr>
+                        <td>${r.adm}</td>
+                        <td>${r.name}</td>
+                        <td>${r.subject}</td>
+                        <td><strong>${r.score}</strong></td>
+                        <td class="${g.class}">${g.grade}</td>
+                        <td>
+                            <button class="sm" style="padding:2px 6px; font-size:0.7rem;" onclick="editRec('${r.id}')">✏️</button>
+                            <button class="sm danger" style="padding:2px 6px; font-size:0.7rem;" onclick="deleteRec('${r.id}')">×</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function editRec(id) {
+            const r = records.find(x => x.id === id);
+            if (!r) return;
+            document.getElementById('editId').value = r.id;
+            document.getElementById('sAdm').value = r.adm;
+            document.getElementById('sName').value = r.name;
+            document.getElementById('sClass').value = r.class;
+            document.getElementById('sGender').value = r.gender;
+            document.getElementById('sExam').value = r.examId;
+            document.getElementById('sSubject').value = r.subject;
+            document.getElementById('sScore').value = r.score;
+            document.querySelector('button[type="submit"]').textContent = '🔄 Update';
+            document.querySelector('.tab[data-page="students"]').click();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteRec(id) {
+            if (!confirm('Delete this record?')) return;
+            records = records.filter(r => r.id !== id);
+            saveData();
+            renderRecords();
+            renderDashboard();
+            renderRiskList();
+            showToast('✅ Record deleted');
+        }
+
+        // === RISK LIST ===
+        function renderRiskList() {
+            const risky = records.filter(r => r.score < 40);
+            document.getElementById('riskList').innerHTML = risky.length ?
+                risky.map(r => `
+                    <div style="padding:8px; background:#fef2f2; border-radius:6px; margin-bottom:6px; font-size:0.85rem;">
+                        <strong>${r.name}</strong> — ${r.subject}: ${r.score}%<br>
+                        <small style="color:#7f1d1d;">${r.examName}</small>
+                    </div>
+                `).join('') : '<p style="color:#16a34a; text-align:center; padding:10px;">✅ No students at risk</p>';
+        }
+
+        // === EXPORT & SETTINGS ===
+        function exportAll() {
+            if (!records.length) { showToast('❌ No data to export', true); return; }
+            const headers = 'Adm,Name,Class,Gender,Exam,Subject,Score,Grade\n';
+            const rows = records.map(r => [
+                r.adm, r.name, r.class, r.gender, r.examName, r.subject, r.score, getGrade(r.score).grade
+            ].join(',')).join('\n');
+            downloadFile(headers + rows, `OTIS_Export_${new Date().toLocaleDateString().replace(/\//g,'-')}.csv`, 'text/csv');
+            showToast('✅ Data exported');
+        }
+
+        function changePassword() {
+            const newPass = document.getElementById('newPass').value;
+            if (!newPass) { showToast('❌ Enter a new password', true); return; }
+            password = newPass;
+            localStorage.setItem('otisPass', newPass);
+            document.getElementById('newPass').value = '';
+            showToast('✅ Password changed!');
+        }
+
+        function clearAll() {
+            exams = [];
+            records = [];
+            localStorage.removeItem('otisExams');
+            localStorage.removeItem('otisRecords');
+            renderDashboard();
+            renderExamsList();
+            renderRecords();
+            renderRiskList();
+            showToast('✅ All data cleared');
+        }
+    </script>
+</body>
+</html>
